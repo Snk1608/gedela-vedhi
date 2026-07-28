@@ -33,6 +33,12 @@ function AuthPage() {
   const [newPassword, setNewPassword] = useState("");
 
   useEffect(() => {
+    const hash = window.location.hash;
+
+    if (hash.includes("type=recovery")) {
+      setIsRecovery(true);
+    }
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
@@ -41,17 +47,16 @@ function AuthPage() {
       }
     });
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session && !isRecovery) {
-        if (user && isAdmin) navigate({ to: "/admin" });
-        else if (user) navigate({ to: "/" });
+    if (!hash.includes("type=recovery")) {
+      if (user && isAdmin) {
+        navigate({ to: "/admin" });
+      } else if (user) {
+        navigate({ to: "/" });
       }
-    });
+    }
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [user, isAdmin, navigate, isRecovery]);
+    return () => subscription.unsubscribe();
+  }, [user, isAdmin, navigate]);
 
   const signIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,6 +184,7 @@ function AuthPage() {
                 </div>
                 <Button type="submit" disabled={loading} className="w-full bg-donate-gradient">
                   {loading ? t("signingIn") : t("signIn")}
+
                 </Button>
                 <div className="text-center mt-3">
                   <button

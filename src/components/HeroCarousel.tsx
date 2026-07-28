@@ -67,7 +67,7 @@ export function HeroCarousel() {
 
   useEffect(() => {
     if (slides.length <= 1) return;
-    const t = setInterval(() => setIdx((i) => (i + 1) % slides.length), 5000);
+    const t = setInterval(() => setIdx((i) => (i + 1) % slides.length), 4000);
     return () => clearInterval(t);
   }, [slides.length]);
 
@@ -81,7 +81,7 @@ export function HeroCarousel() {
       {slides.map((s, i) => (
         <div
           key={s.id}
-          className="absolute inset-0 transition-opacity duration-1000"
+          className="absolute inset-0 transition-opacity duration-700 ease-in-out"
           style={{ opacity: i === idx ? 1 : 0 }}
         >
           {s.isBirthday ? (
@@ -125,20 +125,7 @@ export function HeroCarousel() {
 
       {slides.length > 1 && (
         <>
-          <button
-            onClick={prev}
-            aria-label="Previous"
-            className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/80 hover:bg-white p-2 shadow-soft transition"
-          >
-            <ChevronLeft className="h-5 w-5 text-foreground" />
-          </button>
-          <button
-            onClick={next}
-            aria-label="Next"
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-white/80 hover:bg-white p-2 shadow-soft transition"
-          >
-            <ChevronRight className="h-5 w-5 text-foreground" />
-          </button>
+         
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
             {slides.map((_, i) => (
               <button
