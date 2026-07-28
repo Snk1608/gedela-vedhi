@@ -29,11 +29,29 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isRecovery, setIsRecovery] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
 
   useEffect(() => {
-    if (user && isAdmin) navigate({ to: "/admin" });
-    else if (user) navigate({ to: "/" });
-  }, [user, isAdmin, navigate]);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setIsRecovery(true);
+      }
+    });
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session && !isRecovery) {
+        if (user && isAdmin) navigate({ to: "/admin" });
+        else if (user) navigate({ to: "/" });
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [user, isAdmin, navigate, isRecovery]);
 
   const signIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,6 +60,23 @@ function AuthPage() {
     setLoading(false);
     if (error) toast.error(error.message);
     else toast.success(t("welcomeBack"));
+  };
+
+  const forgotPassword = async () => {
+    if (!email) {
+      toast.error("Please enter your email address first.");
+      return;
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/auth`,
+    });
+
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Password reset email sent. Check your inbox.");
+    }
   };
 
   const signUp = async (e: React.FormEvent) => {
@@ -59,6 +94,60 @@ function AuthPage() {
     if (error) toast.error(error.message);
     else toast.success(t("accountCreated"));
   };
+
+  const updatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    setLoading(true);
+
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    setLoading(false);
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    toast.success("Password updated successfully!");
+
+    navigate({ to: "/admin" });
+  };
+
+  if (isRecovery) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6">
+            <h2 className="text-2xl font-bold mb-5">
+              Set New Password
+            </h2>
+
+            <form onSubmit={updatePassword} className="space-y-4">
+              <Input
+                type="password"
+                placeholder="New Password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+              />
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loading}
+              >
+                Update Password
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-10 bg-hero-gradient">
@@ -91,6 +180,15 @@ function AuthPage() {
                 <Button type="submit" disabled={loading} className="w-full bg-donate-gradient">
                   {loading ? t("signingIn") : t("signIn")}
                 </Button>
+                <div className="text-center mt-3">
+                  <button
+                    type="button"
+                    onClick={forgotPassword}
+                    className="text-sm text-primary underline"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
               </form>
             </TabsContent>
 
