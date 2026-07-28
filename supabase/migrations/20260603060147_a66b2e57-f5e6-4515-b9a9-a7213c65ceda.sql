@@ -1,0 +1,2 @@
+ALTER TABLE public.gallery_images ADD COLUMN IF NOT EXISTS media_type text NOT NULL DEFAULT 'image';
+ALTER TABLE public.gallery_images ADD CONSTRAINT gallery_images_media_type_check CHECK (media_type IN ('image','video'));

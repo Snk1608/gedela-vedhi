@@ -1,0 +1,2 @@
+ALTER TABLE public.donations ALTER COLUMN phone DROP NOT NULL;
+ALTER TABLE public.donations ALTER COLUMN email DROP NOT NULL;
