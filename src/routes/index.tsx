@@ -101,7 +101,7 @@ function Home() {
       .then(({ data }) => setEvents(data ?? []));
     supabase
       .from("instagram_reels")
-      .select("id,title,thumbnail_url,instagram_url")
+      .select("id,title,thumbnail_url,instagram_url,created_at")
       .order("created_at", { ascending: false })
       .then(({ data }) => setReels(data ?? []));
   }, []);
@@ -149,7 +149,7 @@ function Home() {
           <h2 className="font-display text-3xl sm:text-4xl">{t("eventsCelebrations")}</h2>
         </div>
 
-        <div className="grid gap-8 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
           {sections.map((s, i) => (
             <Card
               key={s.id}
@@ -239,19 +239,21 @@ function Home() {
             {reels.map((reel) => (
               <Card
                 key={reel.id}
-                className="group overflow-hidden rounded-3xl border-0 shadow-xl hover:scale-[1.03] hover:shadow-2xl transition-all duration-300 bg-white"
+                className="group max-w-[280px] mx-auto overflow-hidden rounded-3xl border border-orange-100 bg-white shadow-md transition-all duration-300 hover:-translate-y-2 hover:shadow-xl"
               >
                 <a
                   href={reel.instagram_url}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <div className="relative overflow-hidden">
-                    <img
-                      src={reel.thumbnail_url}
-                      alt={reel.title}
-                      className="w-full aspect-[9/16] object-cover transition duration-500 group-hover:scale-110"
-                    />
+                  <div className="relative overflow-hidden rounded-t-3xl bg-gradient-to-br from-pink-500 via-red-500 to-yellow-400 p-[3px]">
+                    <div className="overflow-hidden rounded-t-3xl bg-white">
+                      <img
+                        src={reel.thumbnail_url}
+                        alt={reel.title}
+                        className="w-full aspect-[4/5] object-cover transition duration-500 group-hover:scale-110"
+                      />
+                    </div>
 
                     <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
                       <div className="bg-white/90 rounded-full p-4">
@@ -277,6 +279,13 @@ function Home() {
                   <h3 className="font-bold text-base line-clamp-1">
                     {reel.title}
                   </h3>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(reel.created_at).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </p>
 
                   <Button
                     asChild
