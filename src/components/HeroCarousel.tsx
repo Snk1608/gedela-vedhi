@@ -77,7 +77,7 @@ export function HeroCarousel() {
   const prev = () => setIdx((i) => (i - 1 + slides.length) % slides.length);
 
   return (
-    <div className="relative h-[420px] sm:h-[520px] lg:h-[620px] w-full overflow-hidden rounded-2xl shadow-festive">
+    <div className="relative h-[500px] sm:h-[650px] lg:h-[750px] w-full overflow-hidden rounded-2xl shadow-festive">
       {slides.map((s, i) => (
         <div
           key={s.id}
@@ -95,7 +95,7 @@ export function HeroCarousel() {
               <img
                 src={s.image_url}
                 alt={s.caption ?? "Slide"}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover transition-transform duration-[6000ms] scale-105"
                 loading={i === 0 ? "eager" : "lazy"}
               />
             </a>
@@ -107,7 +107,7 @@ export function HeroCarousel() {
               loading={i === 0 ? "eager" : "lazy"}
             />
           )}
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent" />
           {s.caption && (
             <div className="absolute bottom-8 left-6 right-6 sm:left-12 max-w-2xl text-white animate-fade-in">
               {s.isBirthday && (

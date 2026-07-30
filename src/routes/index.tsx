@@ -6,7 +6,14 @@ import { CountdownList } from "@/components/CountdownList";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/hooks/use-language";
-import { Calendar, HeartHandshake, Sparkles, ArrowRight, CalendarDays } from "lucide-react";
+import {
+  Calendar,
+  HeartHandshake,
+  Sparkles,
+  ArrowRight,
+  CalendarDays,
+  Play,
+} from "lucide-react";
 import { SuggestionForm } from "@/components/SuggestionForm";
 import { WhatsAppGroupButton } from "@/components/WhatsAppFloat";
 
@@ -27,6 +34,13 @@ interface Section {
   image_url: string | null;
   link_url: string | null;
   category: string;
+}
+
+interface Reel {
+  id: string;
+  title: string;
+  thumbnail_url: string;
+  instagram_url: string;
 }
 
 interface EventRow {
@@ -69,6 +83,7 @@ function Home() {
   const { t } = useLanguage();
   const [sections, setSections] = useState<Section[]>([]);
   const [events, setEvents] = useState<EventRow[]>([]);
+  const [reels, setReels] = useState<Reel[]>([]);
 
   useEffect(() => {
     supabase
@@ -84,6 +99,11 @@ function Home() {
       .eq("active", true)
       .order("sort_order")
       .then(({ data }) => setEvents(data ?? []));
+    supabase
+      .from("instagram_reels")
+      .select("id,title,thumbnail_url,instagram_url")
+      .order("created_at", { ascending: false })
+      .then(({ data }) => setReels(data ?? []));
   }, []);
 
   return (
@@ -129,7 +149,7 @@ function Home() {
           <h2 className="font-display text-3xl sm:text-4xl">{t("eventsCelebrations")}</h2>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           {sections.map((s, i) => (
             <Card
               key={s.id}
@@ -201,6 +221,80 @@ function Home() {
               </div>
             );
           })}
+        </section>
+      )}
+      {reels.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 pb-16">
+          <div className="mb-8 text-center">
+            <h2 className="font-display text-3xl">
+              Instagram Reels
+            </h2>
+
+            <p className="text-muted-foreground">
+              Watch our latest celebrations and community moments.
+            </p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {reels.map((reel) => (
+              <Card
+                key={reel.id}
+                className="group overflow-hidden rounded-3xl border-0 shadow-xl hover:scale-[1.03] hover:shadow-2xl transition-all duration-300 bg-white"
+              >
+                <a
+                  href={reel.instagram_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <div className="relative overflow-hidden">
+                    <img
+                      src={reel.thumbnail_url}
+                      alt={reel.title}
+                      className="w-full aspect-[9/16] object-cover transition duration-500 group-hover:scale-110"
+                    />
+
+                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                      <div className="bg-white/90 rounded-full p-4">
+                        <Play className="w-8 h-8 text-black fill-black" />
+                      </div>
+                    </div>
+                  </div>
+                </a>
+
+                <CardContent className="p-4 space-y-3">
+
+                  <div className="flex items-center gap-2">
+                    <img
+                      src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png"
+                      className="w-5 h-5"
+                      alt="Instagram"
+                    />
+                    <span className="text-xs text-gray-500">
+                      Instagram Reel
+                    </span>
+                  </div>
+
+                  <h3 className="font-bold text-base line-clamp-1">
+                    {reel.title}
+                  </h3>
+
+                  <Button
+                    asChild
+                    className="w-full rounded-full bg-gradient-to-r from-pink-500 via-red-500 to-orange-500 text-white"
+                  >
+                    <a
+                      href={reel.instagram_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      ▶ Watch on Instagram
+                    </a>
+                  </Button>
+
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </section>
       )}
       <SuggestionForm />

@@ -9,6 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
@@ -162,6 +169,7 @@ function AdminPage() {
           <TabsTrigger value="announcements">News</TabsTrigger>
           <TabsTrigger value="gallery">Gallery</TabsTrigger>
           <TabsTrigger value="contact">Contact</TabsTrigger>
+          <TabsTrigger value="reels">Instagram Reels</TabsTrigger>
           <TabsTrigger value="suggestions">Suggestions</TabsTrigger>
           {isSuperAdmin && <TabsTrigger value="admins">Manage Admins</TabsTrigger>}
         </TabsList>
@@ -178,7 +186,14 @@ function AdminPage() {
         <TabsContent value="announcements"><AnnouncementsTab /></TabsContent>
         <TabsContent value="gallery"><GalleryTab /></TabsContent>
         <TabsContent value="contact"><ContactTab /></TabsContent>
-        <TabsContent value="suggestions"><SuggestionsTab /></TabsContent>
+
+        <TabsContent value="reels">
+          <InstagramReelsTab />
+        </TabsContent>
+
+        <TabsContent value="suggestions">
+          <SuggestionsTab />
+        </TabsContent>
         {isSuperAdmin && <TabsContent value="admins"><ManageAdminsTab /></TabsContent>}
       </Tabs>
     </div>
@@ -395,7 +410,7 @@ function DonationsTab() {
           <Select value={add.payment_method} onValueChange={v => setAdd({ ...add, payment_method: v })}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              {["Cash","PhonePe","Google Pay","Paytm","Bank Transfer","UPI","Other"].map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+              {["Cash", "PhonePe", "Google Pay", "Paytm", "Bank Transfer", "UPI", "Other"].map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
             </SelectContent>
           </Select>
           <Input placeholder="Phone (opt)" value={add.phone} onChange={e => setAdd({ ...add, phone: e.target.value })} />
@@ -803,7 +818,7 @@ function FriendsTab() {
   };
   const toggle = async (id: string, active: boolean) => { await supabase.from("friends").update({ active: !active }).eq("id", id); load(); };
   const del = async (id: string) => { if (!confirm("Delete?")) return; await supabase.from("friends").delete().eq("id", id); load(); };
-  const today = new Date(); const todayMD = `${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
+  const today = new Date(); const todayMD = `${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
   return (
     <div className="space-y-4 mt-4">
@@ -1285,7 +1300,7 @@ function SuggestionsTab() {
       <div className="flex items-center justify-between">
         <h3 className="font-display text-xl">Visitor Suggestions ({list.length})</h3>
         <Button variant="outline" size="sm" onClick={() =>
-          downloadCSV(`suggestions-${new Date().toISOString().slice(0,10)}.csv`,
+          downloadCSV(`suggestions-${new Date().toISOString().slice(0, 10)}.csv`,
             list.map(s => ({
               date: new Date(s.created_at).toLocaleString("en-IN"),
               name: s.name, suggestion: s.suggestion,
@@ -1317,5 +1332,213 @@ function SuggestionsTab() {
         </CardContent></Card>
       ))}
     </div>
+  );
+}
+
+function InstagramReelsTab() {
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [thumbnail, setThumbnail] = useState<File | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [reels, setReels] = useState<any[]>([]);
+  const loadReels = async () => {
+    const { data, error } = await supabase
+      .from("instagram_reels")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.log(error);
+      return;
+    }
+
+    setReels(data || []);
+  };
+  useEffect(() => {
+    loadReels();
+  }, []);
+
+  const saveReel = async () => {
+    if (!title || !instagramUrl || !thumbnail) {
+      toast.error("Please fill all fields.");
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      const fileName = `${Date.now()}-${thumbnail.name}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("instagram-reels")
+        .upload(fileName, thumbnail);
+
+      if (uploadError) {
+        console.log(uploadError);
+        toast.error(JSON.stringify(uploadError));
+        return;
+      }
+
+      const { data } = supabase.storage
+        .from("instagram-reels")
+        .getPublicUrl(fileName);
+
+      const result = await supabase
+        .from("instagram_reels")
+        .insert({
+          title,
+          instagram_url: instagramUrl,
+          thumbnail_url: data.publicUrl,
+        });
+
+      console.log(result);
+
+      if (result.error) throw result.error;
+
+      toast.success("Instagram Reel added successfully!");
+
+      await loadReels();
+
+      setTitle("");
+      setInstagramUrl("");
+      setThumbnail(null);
+      setOpen(false);
+
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+  const deleteReel = async (id: string) => {
+    if (!confirm("Delete this reel?")) return;
+
+    const { error } = await supabase
+      .from("instagram_reels")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    toast.success("Reel deleted successfully!");
+
+    loadReels();
+  };
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Instagram Reels</h2>
+          <p className="text-muted-foreground">
+            Manage Instagram reels displayed on the homepage.
+          </p>
+        </div>
+
+        <Button onClick={() => setOpen(true)}>
+          + Add Reel
+        </Button>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {reels.length === 0 ? (
+          <Card>
+            <CardContent className="p-6">
+              No Instagram reels added yet.
+            </CardContent>
+          </Card>
+        ) : (
+          reels.map((reel) => (
+            <Card key={reel.id}>
+              <img
+                src={reel.thumbnail_url}
+                className="w-full h-48 object-cover"
+              />
+
+              <CardContent className="p-4">
+                <h3 className="font-bold">
+                  {reel.title}
+                </h3>
+
+                <a
+                  href={reel.instagram_url}
+                  target="_blank"
+                  className="text-blue-500"
+                >
+                  Open Reel
+                </a>
+                <Button
+                  variant="destructive"
+                  className="w-full mt-3"
+                  onClick={() => deleteReel(reel.id)}
+                >
+                  Delete Reel
+                </Button>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add Instagram Reel</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+
+            <div>
+              <Label>Title</Label>
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Ganesh Procession 2026"
+              />
+            </div>
+
+            <div>
+              <Label>Instagram Reel URL</Label>
+              <Input
+                value={instagramUrl}
+                onChange={(e) => setInstagramUrl(e.target.value)}
+                placeholder="https://www.instagram.com/reel/..."
+              />
+            </div>
+
+            <div>
+              <Label>Thumbnail</Label>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e) =>
+                  setThumbnail(e.target.files?.[0] || null)
+                }
+              />
+            </div>
+
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              onClick={saveReel}
+              disabled={saving}
+            >
+              {saving ? "Saving..." : "Save Reel"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+
   );
 }
