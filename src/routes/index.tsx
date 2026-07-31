@@ -186,6 +186,23 @@ function Home() {
             </Card>
           ))}
         </div>
+        
+        <div className="mt-12 flex justify-center">
+          <Button
+            asChild
+            size="lg"
+            className="rounded-full bg-gradient-to-r from-pink-500 via-red-500 to-orange-500 px-8 py-6 text-white hover:scale-105 transition"
+          >
+            <a
+              href="https://instagram.com/gedelavedhi_boyz"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              📷 View All on Instagram →
+            </a>
+          </Button>
+        </div>
+
       </section>
 
       {/* Event CTAs (ordered by priority) */}
@@ -226,9 +243,26 @@ function Home() {
       {reels.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 pb-16">
           <div className="mb-8 text-center">
-            <h2 className="font-display text-3xl">
-              Instagram Reels
-            </h2>
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 px-5 py-2 text-white shadow-lg">
+                <img
+                  src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png"
+                  alt="Instagram"
+                  className="w-6 h-6"
+                />
+                <span className="font-semibold tracking-wide">
+                  Follow Our Instagram
+                </span>
+              </div>
+
+              <h2 className="mt-6 text-4xl font-extrabold text-gray-900">
+                Latest Instagram Reels
+              </h2>
+
+              <p className="mt-3 text-gray-500 max-w-2xl mx-auto">
+                Watch the latest celebrations, events, and memories from Gedela Vedhi Youth.
+              </p>
+            </div>
 
             <p className="text-muted-foreground">
               Watch our latest celebrations and community moments.
@@ -263,7 +297,7 @@ function Home() {
                   </div>
                 </a>
 
-                <CardContent className="p-4 space-y-3">
+                <CardContent className="p-3 space-y-2">
 
                   <div className="flex items-center gap-2">
                     <img
